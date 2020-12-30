@@ -5,30 +5,30 @@ import IAccountTokensRepository from '@modules/accounts/repositories/IAccountTok
 import AccountToken from '@modules/accounts/infra/typeorm/entities/AccountToken';
 
 class FakeUserTokensRepository implements IAccountTokensRepository {
-  private userTokens: AccountToken[] = [];
+  private accountTokens: AccountToken[] = [];
 
-  public async generate(user_id: string): Promise<AccountToken> {
-    const userToken = new AccountToken();
+  public async generate(account_id: string): Promise<AccountToken> {
+    const accountToken = new AccountToken();
 
-    Object.assign(userToken, {
+    Object.assign(accountToken, {
       id: uuid(),
       token: uuid(),
-      user_id,
+      account_id,
       created_at: new Date(),
       updated_at: new Date(),
     });
 
-    this.userTokens.push(userToken);
+    this.accountTokens.push(accountToken);
 
-    return userToken;
+    return accountToken;
   }
 
   public async findByToken(token: string): Promise<AccountToken | undefined> {
-    const userToken = this.userTokens.find(
+    const accountToken = this.accountTokens.find(
       findToken => findToken.token === token,
     );
 
-    return userToken;
+    return accountToken;
   }
 }
 

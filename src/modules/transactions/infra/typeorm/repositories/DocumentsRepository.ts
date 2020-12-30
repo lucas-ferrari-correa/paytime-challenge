@@ -13,13 +13,13 @@ class DocumentsRepository implements IDocumentsRepository {
   }
 
   public async createTransaction(
-    accountData: ICreateTransactionDTO,
+    documentData: ICreateTransactionDTO,
   ): Promise<Document> {
-    const account = this.ormRepository.create(accountData);
+    const document = this.ormRepository.create(documentData);
 
-    await this.ormRepository.save(account);
+    await this.ormRepository.save(document);
 
-    return account;
+    return document;
   }
 
   public async save(document: Document): Promise<Document> {
