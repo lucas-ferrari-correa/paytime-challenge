@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import { celebrate, Segments, Joi } from 'celebrate';
 
-import ResetUserPasswordController from '@modules/accounts/infra/http/controllers/ResetUserPasswordController';
-import ResetStorePasswordController from '@modules/accounts/infra/http/controllers/ResetStorePasswordController';
+import ResetPasswordController from '@modules/accounts/infra/http/controllers/ResetPasswordController';
 
 import ForgotUserPasswordController from '../controllers/ForgotUserPasswordController';
 import ForgotStorePasswordController from '../controllers/ForgotStorePasswordController';
@@ -10,8 +9,7 @@ import ForgotStorePasswordController from '../controllers/ForgotStorePasswordCon
 const passwordRouter = Router();
 const forgotUserPasswordController = new ForgotUserPasswordController();
 const forgotStorePasswordController = new ForgotStorePasswordController();
-const resetUserPasswordController = new ResetUserPasswordController();
-const resetStorePasswordController = new ResetStorePasswordController();
+const resetPasswordController = new ResetPasswordController();
 
 passwordRouter.post(
   '/users/forgot',
@@ -25,17 +23,6 @@ passwordRouter.post(
     },
   }),
   forgotUserPasswordController.create,
-);
-passwordRouter.post(
-  '/users/reset',
-  celebrate({
-    [Segments.BODY]: {
-      token: Joi.string().uuid().required(),
-      password: Joi.string().required(),
-      password_confirmation: Joi.string().required().valid(Joi.ref('password')),
-    },
-  }),
-  resetUserPasswordController.create,
 );
 
 passwordRouter.post(
@@ -51,8 +38,9 @@ passwordRouter.post(
   }),
   forgotStorePasswordController.create,
 );
+
 passwordRouter.post(
-  '/stores/reset',
+  '/reset',
   celebrate({
     [Segments.BODY]: {
       token: Joi.string().uuid().required(),
@@ -60,7 +48,7 @@ passwordRouter.post(
       password_confirmation: Joi.string().required().valid(Joi.ref('password')),
     },
   }),
-  resetStorePasswordController.create,
+  resetPasswordController.create,
 );
 
 export default passwordRouter;

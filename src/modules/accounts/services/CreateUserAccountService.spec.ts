@@ -9,8 +9,8 @@ import CreateAccountService from './CreateUserAccountService';
 let fakeAccountsRepository: FakeAccountsRepository;
 let fakeHashProvider: FakeHashProvider;
 let fakeCpfCnpjProvider: FakeCpfCnpjProvider;
-let createUserAccount: CreateAccountService;
 let fakeCacheProvider: FakeCacheProvider;
+let createUserAccount: CreateAccountService;
 
 describe('CreateUserAccount', () => {
   beforeEach(() => {
