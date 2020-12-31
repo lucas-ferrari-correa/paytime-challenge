@@ -7,6 +7,5 @@ export default interface ICreatePaymentSlipDTO {
   type: number;
   paymentStatus: number;
   finalAmount: number;
-  gotoAccoundId: string;
-  fromAccountId: string;
+  gotoAccountId: string;
 }

@@ -27,22 +27,22 @@ class CreateTransactionService {
   ) {}
 
   public async execute(data: IRequest): Promise<Document> {
-    const accountData = data;
+    const documentData = data;
 
     const fromAccount = await this.accountsRepository.findById(
-      accountData.fromId,
+      documentData.fromId,
     );
 
     if (!fromAccount) {
       throw new AppError('Invalid JWT Token');
     }
 
-    if (fromAccount.amount < accountData.amount) {
+    if (fromAccount.amount < documentData.amount) {
       throw new AppError('Account does not have enough money to transaction');
     }
 
     const gotoAccount = await this.accountsRepository.findById(
-      accountData.gotoAccountId,
+      documentData.gotoAccountId,
     );
 
     if (!gotoAccount) {
@@ -50,31 +50,31 @@ class CreateTransactionService {
     }
 
     const hashedFromAccountId = await this.hashProvider.generateHash(
-      accountData.fromId,
+      documentData.fromId,
     );
 
     const hashedGotoAccountId = await this.hashProvider.generateHash(
-      accountData.gotoAccountId,
+      documentData.gotoAccountId,
     );
 
     const document = await this.documentsRepository.createTransaction({
       gotoAccountId: hashedGotoAccountId,
       fromAccountId: hashedFromAccountId,
-      amount: accountData.amount,
+      amount: documentData.amount,
       type: 1,
       paymentStatus: 1,
       dueDate: new Date(),
-      finalAmount: accountData.amount,
+      finalAmount: documentData.amount,
     });
 
     const updatedAmountFromAccount = {
       ...fromAccount,
-      amount: fromAccount.amount - accountData.amount,
+      amount: fromAccount.amount - documentData.amount,
     };
 
     const updatedAmountGotoAccount = {
       ...gotoAccount,
-      amount: gotoAccount.amount + accountData.amount,
+      amount: gotoAccount.amount + documentData.amount,
     };
 
     await this.accountsRepository.save(updatedAmountFromAccount);

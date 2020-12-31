@@ -9,6 +9,9 @@ import AccountsRepository from '@modules/accounts/infra/typeorm/repositories/Acc
 import IAccountTokensRepository from '@modules/accounts/repositories/IAccountTokensRepository';
 import AccountTokensRepository from '@modules/accounts/infra/typeorm/repositories/AccountTokensRepository';
 
+import IDocumentsRepository from '@modules/transactions/repositories/IDocumentsRepository';
+import DocumentsRepository from '@modules/transactions/infra/typeorm/repositories/DocumentsRepository';
+
 container.registerSingleton<IAccountsRepository>(
   'AccountsRepository',
   AccountsRepository,
@@ -17,4 +20,9 @@ container.registerSingleton<IAccountsRepository>(
 container.registerSingleton<IAccountTokensRepository>(
   'AccountTokensRepository',
   AccountTokensRepository,
+);
+
+container.registerSingleton<IDocumentsRepository>(
+  'DocumentsRepository',
+  DocumentsRepository,
 );

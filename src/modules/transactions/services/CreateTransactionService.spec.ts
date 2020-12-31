@@ -24,7 +24,7 @@ let createStoreAccount: CreateStoreAccountService;
 
 let createTransaction: CreateTransactionService;
 
-describe('CreateTransaction', () => {
+describe('CreatePaymentSlipe', () => {
   beforeEach(() => {
     fakeAccountsRepository = new FakeAccountsRepository();
     fakeHashProvider = new FakeHashProvider();
