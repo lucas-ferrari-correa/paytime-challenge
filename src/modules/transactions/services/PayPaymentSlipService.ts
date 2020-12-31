@@ -38,6 +38,10 @@ class ShowPaymentSlipService {
       throw new AppError('This document does not exists');
     }
 
+    if (returnedDocument.gotoAccountId === documentData.id) {
+      throw new AppError('You can not pay a slip for yourself');
+    }
+
     if (returnedDocument.type !== 2) {
       throw new AppError('This document is not a payment slip');
     }

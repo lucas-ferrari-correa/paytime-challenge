@@ -57,12 +57,12 @@ class CreateTransactionService {
 
     const updatedAmountFromAccount = {
       ...fromAccount,
-      amount: fromAccount.amount - documentData.amount,
+      amount: Number(fromAccount.amount) - Number(documentData.amount),
     };
 
     const updatedAmountGotoAccount = {
       ...gotoAccount,
-      amount: gotoAccount.amount + documentData.amount,
+      amount: Number(gotoAccount.amount) + Number(documentData.amount),
     };
 
     await this.accountsRepository.save(updatedAmountFromAccount);

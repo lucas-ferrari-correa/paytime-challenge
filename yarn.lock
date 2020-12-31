@@ -1044,6 +1044,11 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
+awaity@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/awaity/-/awaity-1.0.0.tgz#f219a40fcaab6fd72f482ed958656ebc92254489"
+  integrity sha512-jqC/6R4sJqgRuVxnihmmbfV5Zn38WRCH7o8hz3eAEJf2aTFD0MOXrghvmNY8VyxKn0F46Ln8uXfF8OepO6WepA==
+
 aws-sign2@~0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/aws-sign2/-/aws-sign2-0.7.0.tgz#b46e890934a9591f2d2f6f86d7e6a9f1b3fe76a8"

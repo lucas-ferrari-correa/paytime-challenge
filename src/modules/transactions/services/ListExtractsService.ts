@@ -1,5 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 import { isAfter, isBefore } from 'date-fns';
+import reduce from 'awaity/reduce';
 
 import AppError from '@shared/errors/AppError';
 import IDocumentsRepository from '@modules/transactions/repositories/IDocumentsRepository';
@@ -25,8 +26,15 @@ interface IResponse {
   accountId: string;
   accountName: string;
   initialDate: Date;
-  initialAmount: number;
+  initialAmountAccount: number;
+  finalAmountAccount: number;
   document: IDocument[];
+}
+
+interface IAccumulator {
+  initialAmount: number;
+  finalAmountAccount: number;
+  documentsOrganized: IDocument[];
 }
 
 @injectable()
@@ -38,16 +46,6 @@ class ListExtractsService {
     @inject('AccountsRepository')
     private accountsRepository: IAccountsRepository,
   ) {}
-
-  compare(a: Document, b: Document): number {
-    if (isBefore(a.updated_at, b.updated_at)) {
-      return -1;
-    }
-    if (isAfter(a.updated_at, b.updated_at)) {
-      return 1;
-    }
-    return 0;
-  }
 
   public async execute(data: IRequest): Promise<IResponse> {
     const exctractData = data;
@@ -74,36 +72,37 @@ class ListExtractsService {
       account.id,
     );
 
-    const allDocuments: Document[] = [];
+    const allDocuments: Document[] = Array.prototype.concat(
+      entriesDocuments,
+      exitsDocuments,
+    );
 
-    if (entriesDocuments) {
-      allDocuments.concat(entriesDocuments);
-    }
+    allDocuments.sort((a: Document, b: Document) => {
+      if (isBefore(a.updated_at, b.updated_at)) {
+        return -1;
+      }
+      if (isAfter(a.updated_at, b.updated_at)) {
+        return 1;
+      }
+      return 0;
+    });
 
-    if (exitsDocuments) {
-      allDocuments.concat(exitsDocuments);
-    }
-
-    allDocuments.sort(this.compare);
-
-    let initialAmount = account.amount;
-    let finalAmountAccount = 0;
-
-    const reversedSortedAllDocuments = allDocuments
-      .reverse()
-      .map(async document => {
+    const reversedSortedAllDocuments: IAccumulator = await reduce(
+      allDocuments.reverse(),
+      async (accumulator: IAccumulator, document: Document) => {
         if (document.fromAccountId === account.id) {
-          finalAmountAccount = initialAmount;
-          initialAmount += document.finalAmount;
+          accumulator.finalAmountAccount = Number(accumulator.initialAmount);
+          accumulator.initialAmount =
+            Number(accumulator.initialAmount) + Number(document.finalAmount);
 
           const exitDocument = await this.accountsRepository
             .findById(document.gotoAccountId)
             .then(gotoAccount => {
               const response = {
                 ...document,
-                initialAmountAccount: initialAmount,
-                finalAmountAccount,
-                amount: Number(document.amount) * -1,
+                initialAmountAccount: accumulator.initialAmount,
+                finalAmountAccount: accumulator.finalAmountAccount,
+                finalAmount: Number(document.amount) * -1,
                 fromAccountName: account.accountName,
                 gotoAccountName: gotoAccount?.accountName,
               };
@@ -111,20 +110,23 @@ class ListExtractsService {
               return response;
             });
 
-          return exitDocument;
+          accumulator.documentsOrganized.push(exitDocument);
+
+          return accumulator;
         }
 
         if (document.gotoAccountId === account.id) {
-          finalAmountAccount = initialAmount;
-          initialAmount -= document.finalAmount;
+          accumulator.finalAmountAccount = Number(accumulator.initialAmount);
+          accumulator.initialAmount =
+            Number(accumulator.initialAmount) - Number(document.finalAmount);
 
           const entryDocument = await this.accountsRepository
             .findById(document.fromAccountId)
             .then(fromAccount => {
               const response = {
                 ...document,
-                initialAmountAccount: initialAmount,
-                finalAmountAccount,
+                initialAmountAccount: accumulator.initialAmount,
+                finalAmountAccount: accumulator.finalAmountAccount,
                 fromAccountName: fromAccount?.accountName,
                 gotoAccountName: account.accountName,
               };
@@ -132,34 +134,31 @@ class ListExtractsService {
               return response;
             });
 
-          return entryDocument;
+          accumulator.documentsOrganized.push(entryDocument);
+
+          return accumulator;
         }
 
-        const otherDocument = {
-          ...document,
-          initialAmountAccount: 0,
-          finalAmountAccount: 0,
-          fromAccountName: '',
-          gotoAccountName: '',
-        };
+        accumulator.documentsOrganized.push();
 
-        return otherDocument;
-      });
+        return accumulator;
+      },
+      {
+        initialAmount: Number(account.amount),
+        finalAmountAccount: 0,
+        documentsOrganized: [] as IDocument[],
+      },
+    );
 
-    const reversedSortedAllDocumentsResolved = await Promise.all(
-      reversedSortedAllDocuments,
-    ).then(result => {
-      return result;
-    });
-
-    reversedSortedAllDocumentsResolved.reverse();
+    reversedSortedAllDocuments.documentsOrganized.reverse();
 
     const extract = {
       accountId: account.id,
       accountName: account.accountName,
       initialDate: compareDate,
-      initialAmount,
-      document: reversedSortedAllDocumentsResolved,
+      initialAmountAccount: Number(reversedSortedAllDocuments.initialAmount),
+      finalAmountAccount: reversedSortedAllDocuments.finalAmountAccount,
+      document: reversedSortedAllDocuments.documentsOrganized,
     };
 
     return extract;

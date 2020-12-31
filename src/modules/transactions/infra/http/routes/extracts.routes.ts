@@ -8,14 +8,14 @@ import ensureAuthenticated from '@modules/accounts/infra/http/middlewares/ensure
 const accountsRouter = Router();
 const extractController = new ExtractController();
 
-accountsRouter.post(
+accountsRouter.get(
   '/',
   ensureAuthenticated,
   celebrate({
     [Segments.BODY]: {
       initialDateDay: Joi.number().required(),
       initialDateMonth: Joi.number().required(),
-      initialDateMont: Joi.number().required(),
+      initialDateYear: Joi.number().required(),
     },
   }),
   extractController.create,

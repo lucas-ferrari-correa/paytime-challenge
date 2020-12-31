@@ -30,7 +30,7 @@ class DocumentsRepository implements IDocumentsRepository {
     date: Date,
     id: string,
   ): Promise<Document[] | undefined> {
-    const entryDocuments = this.ormRepository.find({
+    const entryDocuments = await this.ormRepository.find({
       gotoAccountId: id,
       updated_at: MoreThanOrEqual(date),
     });
@@ -41,7 +41,7 @@ class DocumentsRepository implements IDocumentsRepository {
   public async createDeposit(
     documentData: ICreateDepositDTO,
   ): Promise<Document> {
-    const document = this.ormRepository.create(documentData);
+    const document = await this.ormRepository.create(documentData);
 
     await this.ormRepository.save(document);
 

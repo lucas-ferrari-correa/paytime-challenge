@@ -39,19 +39,28 @@ class Document {
   @Column()
   finalAmount: number;
 
-  @ManyToOne(() => Account)
-  @JoinColumn({ name: 'fromAccountId' })
+  @Column()
   fromAccountId: string;
 
   @ManyToOne(() => Account)
-  @JoinColumn({ name: 'gotoAccountId' })
+  @JoinColumn({ name: 'fromAccountId' })
+  fromAccount: Account;
+
+  @Column()
   gotoAccountId: string;
+
+  @ManyToOne(() => Account)
+  @JoinColumn({ name: 'gotoAccountId' })
+  gotoAccount: Account;
 
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @Column()
+  depositName: string;
 }
 
 export default Document;

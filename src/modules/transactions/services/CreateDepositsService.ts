@@ -45,7 +45,7 @@ class CreateDepositsService {
 
     const updatedAmountGotoAccount = {
       ...gotoAccount,
-      amount: gotoAccount.amount + documentData.amount,
+      amount: Number(gotoAccount.amount) + Number(documentData.amount),
     };
 
     await this.accountsRepository.save(updatedAmountGotoAccount);
