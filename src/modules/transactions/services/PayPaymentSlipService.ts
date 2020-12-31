@@ -56,6 +56,10 @@ class ShowPaymentSlipService {
       throw new AppError('The destiny account does not exist');
     }
 
+    if (fromAccount.amount < returnedDocument.finalAmount) {
+      throw new AppError('Account does not have enough money to pay the slip');
+    }
+
     const findDocument = {
       ...returnedDocument,
       gotoAccountName: gotoAccount.accountName,
@@ -92,6 +96,10 @@ class ShowPaymentSlipService {
     const finalAmountPenalized =
       Number(findDocument.amount) + Number(findDocument.paymentPenalty);
 
+    if (fromAccount.amount < finalAmountPenalized) {
+      throw new AppError('Account does not have enough money to pay the slip');
+    }
+
     if (findDocument.interest > 0) {
       const finalAmountPenalizedWithInterest = finalAmountPenalized;
 
@@ -108,6 +116,12 @@ class ShowPaymentSlipService {
           penalizedDays *
             Number(findDocument.amount) *
             Number(findDocument.interest);
+
+        if (fromAccount.amount < finalAmountPenalizedWithInterestInDays) {
+          throw new AppError(
+            'Account does not have enough money to pay the slip',
+          );
+        }
 
         const penalizedDocument = {
           ...findDocument,
@@ -155,6 +169,12 @@ class ShowPaymentSlipService {
             Number(findDocument.amount) *
             Number(findDocument.interest);
 
+        if (fromAccount.amount < finalAmountPenalizedWithInterestInMonths) {
+          throw new AppError(
+            'Account does not have enough money to pay the slip',
+          );
+        }
+
         const penalizedDocument = {
           ...findDocument,
           finalAmount: finalAmountPenalizedWithInterestInMonths,
@@ -200,6 +220,12 @@ class ShowPaymentSlipService {
           penalizedYears *
             Number(findDocument.amount) *
             Number(findDocument.interest);
+
+        if (fromAccount.amount < finalAmountPenalizedWithInterestInYears) {
+          throw new AppError(
+            'Account does not have enough money to pay the slip',
+          );
+        }
 
         const penalizedDocument = {
           ...findDocument,

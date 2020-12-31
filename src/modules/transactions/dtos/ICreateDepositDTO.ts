@@ -1,6 +1,6 @@
 export default interface ICreateDepositDTO {
   gotoAccountId: string;
-  fromName: string;
+  depositName: string;
   amount: number;
   type: number;
   paymentStatus: number;

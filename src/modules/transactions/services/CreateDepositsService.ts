@@ -8,8 +8,8 @@ import Document from '@modules/transactions/infra/typeorm/entities/Document';
 
 interface IRequest {
   gotoAccountId: string;
+  depositName: string;
   amount: number;
-  fromId: string;
 }
 
 @injectable()
@@ -25,18 +25,6 @@ class CreateTransactionService {
   public async execute(data: IRequest): Promise<Document> {
     const documentData = data;
 
-    const fromAccount = await this.accountsRepository.findById(
-      documentData.fromId,
-    );
-
-    if (!fromAccount) {
-      throw new AppError('Invalid JWT Token');
-    }
-
-    if (fromAccount.amount < documentData.amount) {
-      throw new AppError('Account does not have enough money to transaction');
-    }
-
     const gotoAccount = await this.accountsRepository.findById(
       documentData.gotoAccountId,
     );
@@ -45,27 +33,20 @@ class CreateTransactionService {
       throw new AppError('The destiny account does not exists');
     }
 
-    const document = await this.documentsRepository.createTransaction({
+    const document = await this.documentsRepository.createDeposit({
       gotoAccountId: gotoAccount.id,
-      fromAccountId: fromAccount.id,
+      depositName: documentData.depositName,
       amount: documentData.amount,
-      type: 1,
+      type: 3,
       paymentStatus: 1,
       dueDate: new Date(),
       finalAmount: documentData.amount,
     });
 
-    const updatedAmountFromAccount = {
-      ...fromAccount,
-      amount: fromAccount.amount - documentData.amount,
-    };
-
     const updatedAmountGotoAccount = {
       ...gotoAccount,
       amount: gotoAccount.amount + documentData.amount,
     };
-
-    await this.accountsRepository.save(updatedAmountFromAccount);
 
     await this.accountsRepository.save(updatedAmountGotoAccount);
 
