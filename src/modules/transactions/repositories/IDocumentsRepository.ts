@@ -4,6 +4,8 @@ import ICreatePaymentSlipDTO from '@modules/transactions/dtos/ICreatePaymentSlip
 import ICreateDepositDTO from '@modules/transactions/dtos/ICreateDepositDTO';
 
 export default interface IDocumentsRepository {
+  findAllExitsByDate(date: Date, id: string): Promise<Document[] | undefined>;
+  findAllEntriesByDate(date: Date, id: string): Promise<Document[] | undefined>;
   createDeposit(document: ICreateDepositDTO): Promise<Document>;
   findByDocument(document: string): Promise<Document | undefined>;
   createPaymentSlip(data: ICreatePaymentSlipDTO): Promise<Document>;

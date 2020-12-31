@@ -10,6 +10,28 @@ import Document from '@modules/transactions/infra/typeorm/entities/Document';
 class FakeDocumentsRepository implements IDocumentsRepository {
   private documents: Document[] = [];
 
+  public async findAllExitsByDate(
+    date: Date,
+    id: string,
+  ): Promise<Document[] | undefined> {
+    const existDocuments = this.documents.filter(
+      document => document.fromAccountId === id && document.updated_at >= date,
+    );
+
+    return existDocuments;
+  }
+
+  public async findAllEntriesByDate(
+    date: Date,
+    id: string,
+  ): Promise<Document[] | undefined> {
+    const entryDocuments = this.documents.filter(
+      document => document.gotoAccountId === id && document.updated_at >= date,
+    );
+
+    return entryDocuments;
+  }
+
   public async createDeposit(
     documentData: ICreateDepositDTO,
   ): Promise<Document> {

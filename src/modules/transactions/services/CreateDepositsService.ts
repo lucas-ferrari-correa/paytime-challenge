@@ -13,7 +13,7 @@ interface IRequest {
 }
 
 @injectable()
-class CreateTransactionService {
+class CreateDepositsService {
   constructor(
     @inject('DocumentsRepository')
     private documentsRepository: IDocumentsRepository,
@@ -61,4 +61,4 @@ class CreateTransactionService {
   }
 }
 
-export default CreateTransactionService;
+export default CreateDepositsService;

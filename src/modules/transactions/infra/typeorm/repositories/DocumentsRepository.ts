@@ -1,4 +1,4 @@
-import { getRepository, Repository } from 'typeorm';
+import { getRepository, MoreThanOrEqual, Repository } from 'typeorm';
 
 import IDocumentsRepository from '@modules/transactions/repositories/IDocumentsRepository';
 import ICreateTransactionDTO from '@modules/transactions/dtos/ICreateTransactionDTO';
@@ -12,6 +12,30 @@ class DocumentsRepository implements IDocumentsRepository {
 
   constructor() {
     this.ormRepository = getRepository(Document);
+  }
+
+  public async findAllExitsByDate(
+    date: Date,
+    id: string,
+  ): Promise<Document[] | undefined> {
+    const exitDocuments = this.ormRepository.find({
+      fromAccountId: id,
+      updated_at: MoreThanOrEqual(date),
+    });
+
+    return exitDocuments;
+  }
+
+  public async findAllEntriesByDate(
+    date: Date,
+    id: string,
+  ): Promise<Document[] | undefined> {
+    const entryDocuments = this.ormRepository.find({
+      gotoAccountId: id,
+      updated_at: MoreThanOrEqual(date),
+    });
+
+    return entryDocuments;
   }
 
   public async createDeposit(

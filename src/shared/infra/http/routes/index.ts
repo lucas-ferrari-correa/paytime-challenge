@@ -8,6 +8,7 @@ import passwordRouter from '@modules/accounts/infra/http/routes/password.routes'
 import transactionsRouter from '@modules/transactions/infra/http/routes/transactions.routes';
 import paymentSlipRouter from '@modules/transactions/infra/http/routes/paymentslip.routes';
 import depositsRouter from '@modules/transactions/infra/http/routes/deposits.routes';
+import extractsRouter from '@modules/transactions/infra/http/routes/extracts.routes';
 
 const routes = Router();
 
@@ -19,5 +20,6 @@ routes.use('/password', passwordRouter);
 routes.use('/transactions', transactionsRouter);
 routes.use('/paymentslips', paymentSlipRouter);
 routes.use('/deposits', depositsRouter);
+routes.use('/extracts', extractsRouter);
 
 export default routes;
