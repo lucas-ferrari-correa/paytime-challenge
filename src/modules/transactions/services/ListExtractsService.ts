@@ -78,10 +78,10 @@ class ListExtractsService {
     );
 
     allDocuments.sort((a: Document, b: Document) => {
-      if (isBefore(a.updated_at, b.updated_at)) {
+      if (isBefore(a.paymentDate, b.paymentDate)) {
         return -1;
       }
-      if (isAfter(a.updated_at, b.updated_at)) {
+      if (isAfter(a.paymentDate, b.paymentDate)) {
         return 1;
       }
       return 0;
@@ -91,7 +91,9 @@ class ListExtractsService {
       allDocuments.reverse(),
       async (accumulator: IAccumulator, document: Document) => {
         if (document.fromAccountId === account.id) {
-          accumulator.finalAmountAccount = Number(accumulator.initialAmount);
+          accumulator.finalAmountAccount =
+            Number(accumulator.finalAmountAccount) -
+            Number(document.finalAmount);
           accumulator.initialAmount =
             Number(accumulator.initialAmount) + Number(document.finalAmount);
 
@@ -101,7 +103,9 @@ class ListExtractsService {
               const response = {
                 ...document,
                 initialAmountAccount: accumulator.initialAmount,
-                finalAmountAccount: accumulator.finalAmountAccount,
+                finalAmountAccount:
+                  Number(accumulator.initialAmount) -
+                  Number(document.finalAmount),
                 finalAmount: Number(document.amount) * -1,
                 fromAccountName: account.accountName,
                 gotoAccountName: gotoAccount?.accountName,
@@ -116,7 +120,9 @@ class ListExtractsService {
         }
 
         if (document.gotoAccountId === account.id) {
-          accumulator.finalAmountAccount = Number(accumulator.initialAmount);
+          accumulator.finalAmountAccount =
+            Number(accumulator.finalAmountAccount) +
+            Number(document.finalAmount);
           accumulator.initialAmount =
             Number(accumulator.initialAmount) - Number(document.finalAmount);
 
@@ -126,7 +132,9 @@ class ListExtractsService {
               const response = {
                 ...document,
                 initialAmountAccount: accumulator.initialAmount,
-                finalAmountAccount: accumulator.finalAmountAccount,
+                finalAmountAccount:
+                  Number(accumulator.initialAmount) +
+                  Number(document.finalAmount),
                 fromAccountName: fromAccount?.accountName,
                 gotoAccountName: account.accountName,
               };
@@ -159,7 +167,7 @@ class ListExtractsService {
       initialAmountAccount: Number(reversedSortedAllDocuments.initialAmount),
       finalAmountAccount: reversedSortedAllDocuments.finalAmountAccount,
       document: reversedSortedAllDocuments.documentsOrganized,
-    };
+    } as IResponse;
 
     return extract;
   }

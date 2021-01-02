@@ -8,4 +8,5 @@ export default interface ICreatePaymentSlipDTO {
   paymentStatus: number;
   finalAmount: number;
   gotoAccountId: string;
+  paymentDate?: Date;
 }

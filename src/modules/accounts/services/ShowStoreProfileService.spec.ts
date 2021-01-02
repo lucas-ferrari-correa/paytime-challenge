@@ -51,7 +51,34 @@ describe('ShowUserProfile', () => {
       fakeCpfCnpjProvider,
     );
 
-    showProfile = new ShowProfileService(fakeAccountsRepository);
+    showProfile = new ShowProfileService(
+      fakeAccountsRepository,
+      fakeCacheProvider,
+    );
+  });
+
+  it('should not be able to show the profile from non-existing store', async () => {
+    const userAccount = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    expect(
+      showProfile.execute({
+        account_id: userAccount.id,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should not be able to show the store profile using an user account token', async () => {
+    expect(
+      showProfile.execute({
+        account_id: 'non-existing-account-id',
+      }),
+    ).rejects.toBeInstanceOf(AppError);
   });
 
   it('should be able to show the profile of store account', async () => {
@@ -84,13 +111,5 @@ describe('ShowUserProfile', () => {
     expect(storeProfile.accountName).toBe('John Doe');
     expect(storeProfile.cnpj).toBe('11111111111180');
     expect(storeProfile.accountUserId).toEqual(userAccount.id);
-  });
-
-  it('should not be able to show the profile from non-existing store', async () => {
-    expect(
-      showProfile.execute({
-        account_id: 'non-existing-account-id',
-      }),
-    ).rejects.toBeInstanceOf(AppError);
   });
 });

@@ -6,4 +6,5 @@ export default interface ICreateDepositDTO {
   paymentStatus: number;
   dueDate: Date;
   finalAmount: number;
+  paymentDate?: Date;
 }

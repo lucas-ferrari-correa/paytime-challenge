@@ -47,7 +47,6 @@ describe('CreateTransaction', () => {
     createPaymentSlip = new CreatePaymentSlipService(
       fakeDocumentsRepository,
       fakeAccountsRepository,
-      fakeHashProvider,
     );
   });
 
@@ -137,6 +136,27 @@ describe('CreateTransaction', () => {
         paymentPenalty: 50,
         interest: 0.01,
         interestType: 4,
+        gotoId: userAccount.id,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should not be able to create a transaction with negative interest', async () => {
+    const userAccount = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 99,
+    });
+
+    await expect(
+      createPaymentSlip.execute({
+        amount: 100,
+        dueDate: new Date(2021, 0, 1),
+        paymentPenalty: 50,
+        interest: -0.01,
+        interestType: 1,
         gotoId: userAccount.id,
       }),
     ).rejects.toBeInstanceOf(AppError);

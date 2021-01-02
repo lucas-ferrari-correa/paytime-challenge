@@ -3,8 +3,10 @@ import { injectable, inject } from 'tsyringe';
 import AppError from '@shared/errors/AppError';
 import IDocumentsRepository from '@modules/transactions/repositories/IDocumentsRepository';
 import IAccountsRepository from '@modules/accounts/repositories/IAccountsRepository';
+import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 
 import Document from '@modules/transactions/infra/typeorm/entities/Document';
+import { classToClass } from 'class-transformer';
 
 interface IRequest {
   gotoAccountId: string;
@@ -20,6 +22,9 @@ class CreateDepositsService {
 
     @inject('AccountsRepository')
     private accountsRepository: IAccountsRepository,
+
+    @inject('CacheProvider')
+    private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(data: IRequest): Promise<Document> {
@@ -53,9 +58,15 @@ class CreateDepositsService {
     const payedDocument = {
       ...document,
       paymentStatus: 2,
+      paymentDate: new Date(),
     };
 
     await this.documentsRepository.save(payedDocument);
+
+    await this.cacheProvider.save(
+      `accounts-list:${updatedAmountGotoAccount.id}`,
+      classToClass(updatedAmountGotoAccount),
+    );
 
     return document;
   }

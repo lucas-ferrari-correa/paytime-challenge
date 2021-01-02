@@ -3,8 +3,10 @@ import { injectable, inject } from 'tsyringe';
 import AppError from '@shared/errors/AppError';
 import IAccountsRepository from '@modules/accounts/repositories/IAccountsRepository';
 import IHashProvider from '@modules/accounts/providers/HashProvider/models/IHashProvider';
+import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 
 import Account from '@modules/accounts/infra/typeorm/entities/Account';
+import { classToClass } from 'class-transformer';
 
 interface IRequest {
   account_user_id: string;
@@ -23,6 +25,9 @@ class UpdateProfileService {
 
     @inject('HashProvider')
     private hashProvider: IHashProvider,
+
+    @inject('CacheProvider')
+    private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute({
@@ -85,7 +90,14 @@ class UpdateProfileService {
       accountUser.password = await this.hashProvider.generateHash(password);
     }
 
-    return this.accountsRepository.save(accountUser);
+    const updatedUserAccount = await this.accountsRepository.save(accountUser);
+
+    await this.cacheProvider.save(
+      `users-list:${updatedUserAccount.id}`,
+      classToClass(updatedUserAccount),
+    );
+
+    return updatedUserAccount;
   }
 }
 

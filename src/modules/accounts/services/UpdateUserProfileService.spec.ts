@@ -2,9 +2,11 @@ import AppError from '@shared/errors/AppError';
 
 import FakeHashProvider from '@modules/accounts/providers/HashProvider/fakes/FakeHashProvider';
 import FakeAccountsRepository from '@modules/accounts/repositories/fakes/FakeAccountsRepository';
+import FakeCacheProvider from '@shared/container/providers/CacheProvider/fakes/FakeCacheProvider';
 import UpdateUserProfileService from './UpdateUserProfileService';
 
 let fakeAccountsRepository: FakeAccountsRepository;
+let fakeCacheProvider: FakeCacheProvider;
 let fakeHashProvider: FakeHashProvider;
 let updateUserProfile: UpdateUserProfileService;
 
@@ -12,9 +14,11 @@ describe('UpdateUserProfile', () => {
   beforeEach(() => {
     fakeAccountsRepository = new FakeAccountsRepository();
     fakeHashProvider = new FakeHashProvider();
+    fakeCacheProvider = new FakeCacheProvider();
     updateUserProfile = new UpdateUserProfileService(
       fakeAccountsRepository,
       fakeHashProvider,
+      fakeCacheProvider,
     );
   });
 
@@ -98,7 +102,7 @@ describe('UpdateUserProfile', () => {
         account_user_id: userAccount.id,
         accountName: 'Test',
         cpf: '11111111111',
-        email: 'johndoe@example.com',
+        email: 'test@example.com',
       }),
     ).rejects.toBeInstanceOf(AppError);
   });

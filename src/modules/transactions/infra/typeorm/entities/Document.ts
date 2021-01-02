@@ -27,6 +27,9 @@ class Document {
   @Column('timestamp with time zone')
   dueDate: Date;
 
+  @Column('timestamp with time zone')
+  paymentDate: Date;
+
   @Column()
   paymentPenalty: number;
 

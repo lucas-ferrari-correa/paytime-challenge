@@ -9,8 +9,10 @@ import { injectable, inject } from 'tsyringe';
 import AppError from '@shared/errors/AppError';
 import IDocumentsRepository from '@modules/transactions/repositories/IDocumentsRepository';
 import IAccountsRepository from '@modules/accounts/repositories/IAccountsRepository';
+import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 
 import Document from '@modules/transactions/infra/typeorm/entities/Document';
+import { classToClass } from 'class-transformer';
 
 interface IRequest {
   id: string;
@@ -25,6 +27,9 @@ class ShowPaymentSlipService {
 
     @inject('DocumentsRepository')
     private documentsRepository: IDocumentsRepository,
+
+    @inject('CacheProvider')
+    private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(data: IRequest): Promise<Document> {
@@ -38,12 +43,16 @@ class ShowPaymentSlipService {
       throw new AppError('This document does not exists');
     }
 
-    if (returnedDocument.gotoAccountId === documentData.id) {
-      throw new AppError('You can not pay a slip for yourself');
-    }
-
     if (returnedDocument.type !== 2) {
       throw new AppError('This document is not a payment slip');
+    }
+
+    if (returnedDocument.paymentStatus !== 1) {
+      throw new AppError('This slip is already payed');
+    }
+
+    if (returnedDocument.gotoAccountId === documentData.id) {
+      throw new AppError('You can not pay a slip for yourself');
     }
 
     const fromAccount = await this.accountsRepository.findById(documentData.id);
@@ -69,11 +78,14 @@ class ShowPaymentSlipService {
       gotoAccountName: gotoAccount.accountName,
     };
 
-    if (isBefore(findDocument.dueDate, Date.now())) {
+    const currentDate = new Date(Date.now());
+
+    if (isBefore(currentDate, findDocument.dueDate)) {
       const updatedDocument = {
         ...findDocument,
         fromAccountId: fromAccount.id,
         paymentStatus: 2,
+        paymentDate: currentDate,
       };
 
       await this.documentsRepository.save(updatedDocument);
@@ -94,173 +106,47 @@ class ShowPaymentSlipService {
 
       await this.accountsRepository.save(updatedFromAccount);
 
+      await this.cacheProvider.save(
+        `accounts-list:${updatedFromAccount.id}`,
+        classToClass(updatedFromAccount),
+      );
+
+      await this.cacheProvider.save(
+        `accounts-list:${updatedGotoAccount.id}`,
+        classToClass(updatedGotoAccount),
+      );
+
       return updatedDocument;
     }
 
-    const finalAmountPenalized =
+    let finalAmountPenalized =
       Number(findDocument.amount) + Number(findDocument.paymentPenalty);
 
-    if (fromAccount.amount < finalAmountPenalized) {
-      throw new AppError('Account does not have enough money to pay the slip');
-    }
+    let penalizedTime = 0;
 
     if (findDocument.interest > 0) {
-      const finalAmountPenalizedWithInterest = finalAmountPenalized;
-
-      if (findDocument.interest === 1) {
-        const currentDate = new Date(Date.now());
-
-        const penalizedDays = differenceInDays(
-          currentDate,
-          findDocument.dueDate,
-        );
-
-        const finalAmountPenalizedWithInterestInDays =
-          Number(finalAmountPenalizedWithInterest) +
-          penalizedDays *
-            Number(findDocument.amount) *
-            Number(findDocument.interest);
-
-        if (fromAccount.amount < finalAmountPenalizedWithInterestInDays) {
-          throw new AppError(
-            'Account does not have enough money to pay the slip',
-          );
-        }
-
-        const penalizedDocument = {
-          ...findDocument,
-          finalAmount: finalAmountPenalizedWithInterestInDays,
-        };
-
-        const updatedDocument = {
-          ...penalizedDocument,
-          fromAccountId: fromAccount.id,
-          paymentStatus: 2,
-        };
-
-        await this.documentsRepository.save(updatedDocument);
-
-        const updatedGotoAccount = {
-          ...gotoAccount,
-          amount:
-            Number(gotoAccount.amount) + Number(updatedDocument.finalAmount),
-        };
-
-        await this.accountsRepository.save(updatedGotoAccount);
-
-        const updatedFromAccount = {
-          ...fromAccount,
-          amount:
-            Number(fromAccount.amount) - Number(updatedDocument.finalAmount),
-        };
-
-        await this.accountsRepository.save(updatedFromAccount);
-
-        return updatedDocument;
+      if (findDocument.interestType === 1) {
+        penalizedTime = differenceInDays(currentDate, findDocument.dueDate);
       }
 
-      if (findDocument.interest === 2) {
-        const currentDate = new Date(Date.now());
-
-        const penalizedMonths = differenceInMonths(
-          currentDate,
-          findDocument.dueDate,
-        );
-
-        const finalAmountPenalizedWithInterestInMonths =
-          Number(finalAmountPenalizedWithInterest) +
-          penalizedMonths *
-            Number(findDocument.amount) *
-            Number(findDocument.interest);
-
-        if (fromAccount.amount < finalAmountPenalizedWithInterestInMonths) {
-          throw new AppError(
-            'Account does not have enough money to pay the slip',
-          );
-        }
-
-        const penalizedDocument = {
-          ...findDocument,
-          finalAmount: finalAmountPenalizedWithInterestInMonths,
-        };
-
-        const updatedDocument = {
-          ...penalizedDocument,
-          fromAccountId: fromAccount.id,
-          paymentStatus: 2,
-        };
-
-        await this.documentsRepository.save(updatedDocument);
-
-        const updatedGotoAccount = {
-          ...gotoAccount,
-          amount:
-            Number(gotoAccount.amount) + Number(updatedDocument.finalAmount),
-        };
-
-        await this.accountsRepository.save(updatedGotoAccount);
-
-        const updatedFromAccount = {
-          ...fromAccount,
-          amount:
-            Number(fromAccount.amount) - Number(updatedDocument.finalAmount),
-        };
-
-        await this.accountsRepository.save(updatedFromAccount);
-
-        return updatedDocument;
+      if (findDocument.interestType === 2) {
+        penalizedTime = differenceInMonths(currentDate, findDocument.dueDate);
       }
 
-      if (findDocument.interest === 3) {
-        const currentDate = new Date(Date.now());
+      if (findDocument.interestType === 3) {
+        penalizedTime = differenceInYears(currentDate, findDocument.dueDate);
+      }
 
-        const penalizedYears = differenceInYears(
-          currentDate,
-          findDocument.dueDate,
+      finalAmountPenalized =
+        Number(finalAmountPenalized) +
+        penalizedTime *
+          Number(findDocument.amount) *
+          Number(findDocument.interest);
+
+      if (fromAccount.amount < finalAmountPenalized) {
+        throw new AppError(
+          'Account does not have enough money to pay the slip',
         );
-
-        const finalAmountPenalizedWithInterestInYears =
-          Number(finalAmountPenalizedWithInterest) +
-          penalizedYears *
-            Number(findDocument.amount) *
-            Number(findDocument.interest);
-
-        if (fromAccount.amount < finalAmountPenalizedWithInterestInYears) {
-          throw new AppError(
-            'Account does not have enough money to pay the slip',
-          );
-        }
-
-        const penalizedDocument = {
-          ...findDocument,
-          finalAmount: finalAmountPenalizedWithInterestInYears,
-        };
-
-        const updatedDocument = {
-          ...penalizedDocument,
-          fromAccountId: fromAccount.id,
-          paymentStatus: 2,
-        };
-
-        await this.documentsRepository.save(updatedDocument);
-
-        const updatedGotoAccount = {
-          ...gotoAccount,
-          amount:
-            Number(gotoAccount.amount) + Number(updatedDocument.finalAmount),
-        };
-
-        await this.accountsRepository.save(updatedGotoAccount);
-
-        const updatedFromAccount = {
-          ...fromAccount,
-          amount:
-            Number(fromAccount.amount) - Number(updatedDocument.finalAmount),
-        };
-
-        await this.accountsRepository.save(updatedFromAccount);
-
-        return updatedDocument;
       }
     }
 
@@ -273,6 +159,7 @@ class ShowPaymentSlipService {
       ...penalizedDocument,
       fromAccountId: fromAccount.id,
       paymentStatus: 2,
+      paymentDate: currentDate,
     };
 
     await this.documentsRepository.save(updatedDocument);
@@ -290,6 +177,16 @@ class ShowPaymentSlipService {
     };
 
     await this.accountsRepository.save(updatedFromAccount);
+
+    await this.cacheProvider.save(
+      `accounts-list:${updatedFromAccount.id}`,
+      classToClass(updatedFromAccount),
+    );
+
+    await this.cacheProvider.save(
+      `accounts-list:${updatedGotoAccount.id}`,
+      classToClass(updatedGotoAccount),
+    );
 
     return updatedDocument;
   }

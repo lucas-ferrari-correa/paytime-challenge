@@ -19,24 +19,6 @@ describe('AuthenticateUserAccount', () => {
     );
   });
 
-  it('should be able to authenticate an user account', async () => {
-    const account = await fakeUserAccountsRepository.createUserAccount({
-      accountName: 'John Doe',
-      cpf: '11111111111',
-      email: 'johndoe@example.com',
-      password: 'PtPt2021*',
-      amount: 0,
-    });
-
-    const response = await authenticateUserAccount.execute({
-      email: 'johndoe@example.com',
-      password: 'PtPt2021*',
-    });
-
-    expect(response).toHaveProperty('token');
-    expect(response.account).toEqual(account);
-  });
-
   it('should not be able to authenticate with non existing user', async () => {
     await expect(
       authenticateUserAccount.execute({
@@ -61,5 +43,23 @@ describe('AuthenticateUserAccount', () => {
         password: 'wrong-password',
       }),
     ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should be able to authenticate an user account', async () => {
+    const account = await fakeUserAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const response = await authenticateUserAccount.execute({
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    expect(response).toHaveProperty('token');
+    expect(response.account).toEqual(account);
   });
 });

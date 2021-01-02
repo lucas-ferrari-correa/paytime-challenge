@@ -6,6 +6,7 @@ import IHashProvider from '@modules/accounts/providers/HashProvider/implementati
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 
 import Account from '@modules/accounts/infra/typeorm/entities/Account';
+import { classToClass } from 'class-transformer';
 import ICpfCnpjProvider from '../providers/CpfCnpjProvider/models/ICpfCnpjProvider';
 
 interface IRequest {
@@ -88,6 +89,11 @@ class CreateStoreAccountService {
       accountUserId: accountData.accountUserId,
       amount: 0,
     });
+
+    await this.cacheProvider.save(
+      `stores-list:${account.id}:${account.accountUserId}`,
+      classToClass(account),
+    );
 
     return account;
   }

@@ -54,81 +54,35 @@ class ShowPaymentSlipService {
       gotoAccountName: findAccount.accountName,
     };
 
-    if (isBefore(findDocument.dueDate, Date.now())) {
+    const currentDate = new Date(Date.now());
+
+    if (isBefore(currentDate, findDocument.dueDate)) {
       return findDocument;
     }
 
-    const finalAmountPenalized =
+    let finalAmountPenalized =
       Number(findDocument.amount) + Number(findDocument.paymentPenalty);
 
+    let penalizedTime = 0;
+
     if (findDocument.interest > 0) {
-      const finalAmountPenalizedWithInterest = finalAmountPenalized;
-
-      if (findDocument.interest === 1) {
-        const currentDate = new Date(Date.now());
-
-        const penalizedDays = differenceInDays(
-          currentDate,
-          findDocument.dueDate,
-        );
-
-        const finalAmountPenalizedWithInterestInDays =
-          Number(finalAmountPenalizedWithInterest) +
-          penalizedDays *
-            Number(findDocument.amount) *
-            Number(findDocument.interest);
-
-        const penalizedDocument = {
-          ...findDocument,
-          finalAmount: finalAmountPenalizedWithInterestInDays,
-        };
-
-        return penalizedDocument;
+      if (findDocument.interestType === 1) {
+        penalizedTime = differenceInDays(currentDate, findDocument.dueDate);
       }
 
-      if (findDocument.interest === 2) {
-        const currentDate = new Date(Date.now());
-
-        const penalizedMonths = differenceInMonths(
-          currentDate,
-          findDocument.dueDate,
-        );
-
-        const finalAmountPenalizedWithInterestInMonths =
-          Number(finalAmountPenalizedWithInterest) +
-          penalizedMonths *
-            Number(findDocument.amount) *
-            Number(findDocument.interest);
-
-        const penalizedDocument = {
-          ...findDocument,
-          finalAmount: finalAmountPenalizedWithInterestInMonths,
-        };
-
-        return penalizedDocument;
+      if (findDocument.interestType === 2) {
+        penalizedTime = differenceInMonths(currentDate, findDocument.dueDate);
       }
 
-      if (findDocument.interest === 3) {
-        const currentDate = new Date(Date.now());
-
-        const penalizedYears = differenceInYears(
-          currentDate,
-          findDocument.dueDate,
-        );
-
-        const finalAmountPenalizedWithInterestInYears =
-          Number(finalAmountPenalizedWithInterest) +
-          penalizedYears *
-            Number(findDocument.amount) *
-            Number(findDocument.interest);
-
-        const penalizedDocument = {
-          ...findDocument,
-          finalAmount: finalAmountPenalizedWithInterestInYears,
-        };
-
-        return penalizedDocument;
+      if (findDocument.interestType === 3) {
+        penalizedTime = differenceInYears(currentDate, findDocument.dueDate);
       }
+
+      finalAmountPenalized =
+        Number(finalAmountPenalized) +
+        penalizedTime *
+          Number(findDocument.amount) *
+          Number(findDocument.interest);
     }
 
     const penalizedDocument = {

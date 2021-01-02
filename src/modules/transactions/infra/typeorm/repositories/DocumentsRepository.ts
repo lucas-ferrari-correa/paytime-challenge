@@ -20,7 +20,8 @@ class DocumentsRepository implements IDocumentsRepository {
   ): Promise<Document[] | undefined> {
     const exitDocuments = this.ormRepository.find({
       fromAccountId: id,
-      updated_at: MoreThanOrEqual(date),
+      paymentDate: MoreThanOrEqual(date),
+      paymentStatus: 2,
     });
 
     return exitDocuments;
@@ -32,7 +33,8 @@ class DocumentsRepository implements IDocumentsRepository {
   ): Promise<Document[] | undefined> {
     const entryDocuments = await this.ormRepository.find({
       gotoAccountId: id,
-      updated_at: MoreThanOrEqual(date),
+      paymentDate: MoreThanOrEqual(date),
+      paymentStatus: 2,
     });
 
     return entryDocuments;

@@ -34,6 +34,7 @@ describe('UpdateUserProfile', () => {
     updateStoreProfileService = new UpdateStoreProfileService(
       fakeAccountsRepository,
       fakeHashProvider,
+      fakeCacheProvider,
     );
 
     authenticateUserAccountService = new AuthenticateUserAccountService(
@@ -88,6 +89,39 @@ describe('UpdateUserProfile', () => {
 
     expect(updatedStore.accountName).toBe('John Tre');
     expect(updatedStore.cnpj).toBe('11111111111180');
+  });
+
+  it('should not be able to update the profile to a non-existing user account', async () => {
+    const userAccount = await createUserAccount.execute({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    const authenticatedUser = await authenticateUserAccountService.execute({
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    const storeAccount = await createStoreAccount.execute(
+      {
+        accountName: 'John Doe',
+        cnpj: '11111111111180',
+        password: 'PtPt2021*',
+        accountUserId: userAccount.id,
+      },
+      authenticatedUser.account.id,
+    );
+
+    expect(
+      updateStoreProfileService.execute({
+        account_store_id: storeAccount.id,
+        accountName: 'John Doe',
+        cnpj: '11111111111180',
+        accountUserId: 'non-existing-user',
+      }),
+    ).rejects.toBeInstanceOf(AppError);
   });
 
   it('should not be able to update the profile from non-existing store', async () => {

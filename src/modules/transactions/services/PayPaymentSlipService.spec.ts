@@ -1,102 +1,513 @@
-// import AppError from '@shared/errors/AppError';
+import AppError from '@shared/errors/AppError';
 
-// import FakeAccountsRepository from '@modules/accounts/repositories/fakes/FakeAccountsRepository';
-// import FakeHashProvider from '@modules/accounts/providers/HashProvider/fakes/FakeHashProvider';
-// import FakeDocumentsRepository from '@modules/transactions/repositories/fakes/FakeDocumentsRepository';
+import FakeAccountsRepository from '@modules/accounts/repositories/fakes/FakeAccountsRepository';
+import FakeDocumentsRepository from '@modules/transactions/repositories/fakes/FakeDocumentsRepository';
+import FakeCacheProvider from '@shared/container/providers/CacheProvider/fakes/FakeCacheProvider';
 
-// import CreateTransactionService from './CreateTransactionService';
-// import CreatePaymentSlipService from './CreatePaymentSlipService';
-// import ShowPaymentSlipService from './ShowPaymentSlipService';
+import ShowProfileService from '@modules/accounts/services/ShowUserProfileService';
+import CreateTransactionService from './CreateTransactionService';
+import CreatePaymentSlipService from './CreatePaymentSlipService';
+import PayPaymentSlipService from './PayPaymentSlipService';
 
-// let fakeAccountsRepository: FakeAccountsRepository;
-// let fakeHashProvider: FakeHashProvider;
-// let fakeDocumentsRepository: FakeDocumentsRepository;
+let fakeAccountsRepository: FakeAccountsRepository;
+let fakeDocumentsRepository: FakeDocumentsRepository;
+let fakeCacheProvider: FakeCacheProvider;
 
-// let createTransaction: CreateTransactionService;
-// let createPaymentSlip: CreatePaymentSlipService;
-// let showPaymentSlip: ShowPaymentSlipService;
+let showProfile: ShowProfileService;
+let createTransaction: CreateTransactionService;
+let createPaymentSlip: CreatePaymentSlipService;
+let payPaymentSlip: PayPaymentSlipService;
 
-// describe('ShowPaymentSlipe', () => {
-//   beforeEach(() => {
-//     fakeAccountsRepository = new FakeAccountsRepository();
-//     fakeHashProvider = new FakeHashProvider();
-//     fakeDocumentsRepository = new FakeDocumentsRepository();
+describe('ShowPaymentSlipe', () => {
+  beforeEach(() => {
+    fakeAccountsRepository = new FakeAccountsRepository();
+    fakeCacheProvider = new FakeCacheProvider();
+    fakeDocumentsRepository = new FakeDocumentsRepository();
 
-//     createPaymentSlip = new CreatePaymentSlipService(
-//       fakeDocumentsRepository,
-//       fakeAccountsRepository,
-//       fakeHashProvider,
-//     );
+    createPaymentSlip = new CreatePaymentSlipService(
+      fakeDocumentsRepository,
+      fakeAccountsRepository,
+    );
 
-//     showPaymentSlip = new ShowPaymentSlipService(fakeDocumentsRepository);
+    payPaymentSlip = new PayPaymentSlipService(
+      fakeAccountsRepository,
+      fakeDocumentsRepository,
+      fakeCacheProvider,
+    );
 
-//     createTransaction = new CreateTransactionService(
-//       fakeDocumentsRepository,
-//       fakeAccountsRepository,
-//       fakeHashProvider,
-//     );
-//   });
+    createTransaction = new CreateTransactionService(
+      fakeDocumentsRepository,
+      fakeAccountsRepository,
+      fakeCacheProvider,
+    );
 
-//   it('should be able to show a payment slip', async () => {
-//     const userAccount = await fakeAccountsRepository.createUserAccount({
-//       accountName: 'John Doe',
-//       cpf: '11111111111',
-//       email: 'johndoe@example.com',
-//       password: 'PtPt2021*',
-//       amount: 100,
-//     });
+    showProfile = new ShowProfileService(
+      fakeAccountsRepository,
+      fakeCacheProvider,
+    );
+  });
 
-//     const paymentSlip = await createPaymentSlip.execute({
-//       amount: 100,
-//       dueDate: new Date(2021, 0, 1),
-//       paymentPenalty: 50,
-//       interest: 0.01,
-//       interestType: 1,
-//       gotoId: userAccount.id,
-//     });
+  it('should not be able to pay a payment slip that does not exist', async () => {
+    const userAccount = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 100,
+    });
 
-//     const showedPaymentSlip = await showPaymentSlip.execute({
-//       document: paymentSlip.document,
-//     });
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount.id,
+        document: 'non-existing-document',
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
 
-//     expect(showedPaymentSlip).toHaveProperty('document');
-//   });
+  it('should not be able to pay a payment slip that is not a payment slip', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 100,
+    });
 
-//   it('should not be able to show a payment slip that does not exist', async () => {
-//     await expect(
-//       showPaymentSlip.execute({
-//         document: 'non-existing-document',
-//       }),
-//     ).rejects.toBeInstanceOf(AppError);
-//   });
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 100,
+    });
 
-//   it('should not be able to show a document that is not a payment slip', async () => {
-//     const userAccount1 = await fakeAccountsRepository.createUserAccount({
-//       accountName: 'John Doe',
-//       cpf: '11111111111',
-//       email: 'johndoe@example.com',
-//       password: 'PtPt2021*',
-//       amount: 100,
-//     });
+    const transaction = await createTransaction.execute({
+      gotoAccountId: userAccount1.id,
+      amount: 100,
+      fromId: userAccount2.id,
+    });
 
-//     const userAccount2 = await fakeAccountsRepository.createUserAccount({
-//       accountName: 'John Tre',
-//       cpf: '22222222222',
-//       email: 'johndoe@example.com',
-//       password: 'PtPt2021*',
-//       amount: 100,
-//     });
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount2.id,
+        document: transaction.document,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
 
-//     const transaction = await createTransaction.execute({
-//       gotoAccountId: userAccount1.id,
-//       amount: 100,
-//       fromId: userAccount2.id,
-//     });
+  it('should not be able to pay a payment slip without enough money', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
 
-//     await expect(
-//       showPaymentSlip.execute({
-//         document: transaction.document,
-//       }),
-//     ).rejects.toBeInstanceOf(AppError);
-//   });
-// });
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 100,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 101,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 1,
+      gotoId: userAccount1.id,
+    });
+
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount2.id,
+        document: paymentSlip.document,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should not be able to pay a payment slip for yourself', async () => {
+    const userAccount = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 101,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 1,
+      gotoId: userAccount.id,
+    });
+
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount.id,
+        document: paymentSlip.document,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should not be able to pay a payment slip that is already payed', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 200,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 1,
+      gotoId: userAccount1.id,
+    });
+
+    const payedPaymentSlip = await payPaymentSlip.execute({
+      id: userAccount2.id,
+      document: paymentSlip.document,
+    });
+
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount2.id,
+        document: payedPaymentSlip.document,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should be able to pay a payment slip before the due date', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 100,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2020, 11, 6),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 1,
+      gotoId: userAccount1.id,
+    });
+
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
+      return new Date(2020, 11, 5).getTime();
+    });
+
+    const payedPaymentSlip = await payPaymentSlip.execute({
+      id: userAccount2.id,
+      document: paymentSlip.document,
+    });
+
+    const showedUserAccount1 = await showProfile.execute({
+      account_id: userAccount1.id,
+    });
+
+    const showedUserAccount2 = await showProfile.execute({
+      account_id: userAccount2.id,
+    });
+
+    expect(payedPaymentSlip).toHaveProperty('document');
+    expect(payedPaymentSlip.paymentStatus).toBe(2);
+    expect(payedPaymentSlip.finalAmount).toBe(100);
+    expect(showedUserAccount2.amount).toBe(0);
+    expect(showedUserAccount1.amount).toBe(100);
+  });
+
+  it('should be able to pay a payment slip with daily interest', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 151,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 1,
+      gotoId: userAccount1.id,
+    });
+
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
+      return new Date(2021, 5, 2).getTime();
+    });
+
+    const payedPaymentSlip = await payPaymentSlip.execute({
+      id: userAccount2.id,
+      document: paymentSlip.document,
+    });
+
+    const showedUserAccount1 = await showProfile.execute({
+      account_id: userAccount1.id,
+    });
+
+    const showedUserAccount2 = await showProfile.execute({
+      account_id: userAccount2.id,
+    });
+
+    expect(payedPaymentSlip).toHaveProperty('document');
+    expect(payedPaymentSlip.paymentStatus).toBe(2);
+    expect(payedPaymentSlip.interestType).toBe(1);
+    expect(payedPaymentSlip.finalAmount).toBe(151);
+    expect(showedUserAccount2.amount).toBe(0);
+    expect(showedUserAccount1.amount).toBe(151);
+  });
+
+  it('should not be able to pay a payment slip without enough money (daily interest)', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 150,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 1,
+      gotoId: userAccount1.id,
+    });
+
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
+      return new Date(2021, 5, 2).getTime();
+    });
+
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount2.id,
+        document: paymentSlip.document,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should be able to pay a payment slip with monthly interest', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 151,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 2,
+      gotoId: userAccount1.id,
+    });
+
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
+      return new Date(2021, 6, 2).getTime();
+    });
+
+    const payedPaymentSlip = await payPaymentSlip.execute({
+      id: userAccount2.id,
+      document: paymentSlip.document,
+    });
+
+    const showedUserAccount1 = await showProfile.execute({
+      account_id: userAccount1.id,
+    });
+
+    const showedUserAccount2 = await showProfile.execute({
+      account_id: userAccount2.id,
+    });
+
+    expect(payedPaymentSlip).toHaveProperty('document');
+    expect(payedPaymentSlip.paymentStatus).toBe(2);
+    expect(payedPaymentSlip.interestType).toBe(2);
+    expect(payedPaymentSlip.finalAmount).toBe(151);
+    expect(showedUserAccount2.amount).toBe(0);
+    expect(showedUserAccount1.amount).toBe(151);
+  });
+
+  it('should not be able to pay a payment slip without enough money (monthly interest)', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 150,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 2,
+      gotoId: userAccount1.id,
+    });
+
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
+      return new Date(2021, 6, 2).getTime();
+    });
+
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount2.id,
+        document: paymentSlip.document,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should be able to pay a payment slip with annually interest', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 151,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 3,
+      gotoId: userAccount1.id,
+    });
+
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
+      return new Date(2022, 5, 2).getTime();
+    });
+
+    const payedPaymentSlip = await payPaymentSlip.execute({
+      id: userAccount2.id,
+      document: paymentSlip.document,
+    });
+
+    const showedUserAccount1 = await showProfile.execute({
+      account_id: userAccount1.id,
+    });
+
+    const showedUserAccount2 = await showProfile.execute({
+      account_id: userAccount2.id,
+    });
+
+    expect(payedPaymentSlip).toHaveProperty('document');
+    expect(payedPaymentSlip.paymentStatus).toBe(2);
+    expect(payedPaymentSlip.interestType).toBe(3);
+    expect(payedPaymentSlip.finalAmount).toBe(151);
+    expect(showedUserAccount2.amount).toBe(0);
+    expect(showedUserAccount1.amount).toBe(151);
+  });
+
+  it('should not be able to pay a payment slip without enough money (annually interest)', async () => {
+    const userAccount1 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 0,
+    });
+
+    const userAccount2 = await fakeAccountsRepository.createUserAccount({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+      amount: 150,
+    });
+
+    const paymentSlip = await createPaymentSlip.execute({
+      amount: 100,
+      dueDate: new Date(2021, 5, 1),
+      paymentPenalty: 50,
+      interest: 0.01,
+      interestType: 2,
+      gotoId: userAccount1.id,
+    });
+
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
+      return new Date(2022, 5, 2).getTime();
+    });
+
+    await expect(
+      payPaymentSlip.execute({
+        id: userAccount2.id,
+        document: paymentSlip.document,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+});

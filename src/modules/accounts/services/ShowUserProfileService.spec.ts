@@ -56,7 +56,10 @@ describe('ShowUserProfile', () => {
       fakeCpfCnpjProvider,
     );
 
-    showProfile = new ShowProfileService(fakeAccountsRepository);
+    showProfile = new ShowProfileService(
+      fakeAccountsRepository,
+      fakeCacheProvider,
+    );
   });
 
   it('should be able to show the profile of an user account', async () => {

@@ -26,17 +26,6 @@ describe('CreateUserAccount', () => {
     );
   });
 
-  it('should be able to create a new user account', async () => {
-    const account = await createUserAccount.execute({
-      accountName: 'John Doe',
-      cpf: '11111111111',
-      email: 'johndoe@example.com',
-      password: 'PtPt2021*',
-    });
-
-    expect(account).toHaveProperty('id');
-  });
-
   it('should not be able to create a new user account with same cpf', async () => {
     await createUserAccount.execute({
       accountName: 'John Doe',
@@ -82,5 +71,16 @@ describe('CreateUserAccount', () => {
         password: 'PtPt2021*',
       }),
     ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should be able to create a new user account', async () => {
+    const account = await createUserAccount.execute({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    expect(account).toHaveProperty('id');
   });
 });

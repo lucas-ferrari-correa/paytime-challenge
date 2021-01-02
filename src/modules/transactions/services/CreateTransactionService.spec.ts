@@ -47,7 +47,7 @@ describe('CreatePaymentSlipe', () => {
     createTransaction = new CreateTransactionService(
       fakeDocumentsRepository,
       fakeAccountsRepository,
-      fakeHashProvider,
+      fakeCacheProvider,
     );
   });
 

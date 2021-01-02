@@ -61,39 +61,6 @@ describe('SendForgotStorePasswordEmail', () => {
     );
   });
 
-  it('should be able to recover the password using the email and cnpj', async () => {
-    const sendMail = jest.spyOn(fakeMailProvider, 'sendMail');
-
-    const userAccount = await createUserAccount.execute({
-      accountName: 'John Doe',
-      cpf: '11111111111',
-      email: 'johndoe@example.com',
-      password: 'PtPt2021*',
-    });
-
-    const authenticatedUser = await authenticateUserAccountService.execute({
-      email: 'johndoe@example.com',
-      password: 'PtPt2021*',
-    });
-
-    await createStoreAccount.execute(
-      {
-        accountName: 'John Doe',
-        cnpj: '11111111111180',
-        password: 'PtPt2021*',
-        accountUserId: userAccount.id,
-      },
-      authenticatedUser.account.id,
-    );
-
-    await sendForgotStorePasswordEmailService.execute({
-      cnpj: '11111111111180',
-      email: 'johndoe@example.com',
-    });
-
-    expect(sendMail).toHaveBeenCalled();
-  });
-
   it('should not be able to recover a non-existing store password', async () => {
     await expect(
       sendForgotStorePasswordEmailService.execute({
@@ -134,6 +101,75 @@ describe('SendForgotStorePasswordEmail', () => {
     ).rejects.toBeInstanceOf(AppError);
   });
 
+  it('should not be able to recover using wrong email', async () => {
+    const userAccount = await createUserAccount.execute({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    const authenticatedUser = await authenticateUserAccountService.execute({
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    await createStoreAccount.execute(
+      {
+        accountName: 'John Doe',
+        cnpj: '11111111111180',
+        password: 'PtPt2021*',
+        accountUserId: userAccount.id,
+      },
+      authenticatedUser.account.id,
+    );
+
+    await expect(
+      sendForgotStorePasswordEmailService.execute({
+        cnpj: '11111111111180',
+        email: 'wrong-email',
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('should not be able to recover using email from another user account', async () => {
+    const userAccount1 = await createUserAccount.execute({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    const authenticatedUser = await authenticateUserAccountService.execute({
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    await createStoreAccount.execute(
+      {
+        accountName: 'John Doe',
+        cnpj: '11111111111180',
+        password: 'PtPt2021*',
+        accountUserId: userAccount1.id,
+      },
+      authenticatedUser.account.id,
+    );
+
+    const userAccount2 = await createUserAccount.execute({
+      accountName: 'John Tre',
+      cpf: '22222222222',
+      email: 'johntre@example.com',
+      password: 'PtPt2021*',
+    });
+
+    await expect(
+      sendForgotStorePasswordEmailService.execute({
+        cnpj: '11111111111180',
+        email: userAccount2.email,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
   it('should generate a forgot password token', async () => {
     const generateToken = jest.spyOn(fakeUserTokensRepository, 'generate');
 
@@ -165,5 +201,38 @@ describe('SendForgotStorePasswordEmail', () => {
     });
 
     expect(generateToken).toHaveBeenCalledWith(storeAccount.id);
+  });
+
+  it('should be able to recover the password using the email and cnpj', async () => {
+    const sendMail = jest.spyOn(fakeMailProvider, 'sendMail');
+
+    const userAccount = await createUserAccount.execute({
+      accountName: 'John Doe',
+      cpf: '11111111111',
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    const authenticatedUser = await authenticateUserAccountService.execute({
+      email: 'johndoe@example.com',
+      password: 'PtPt2021*',
+    });
+
+    await createStoreAccount.execute(
+      {
+        accountName: 'John Doe',
+        cnpj: '11111111111180',
+        password: 'PtPt2021*',
+        accountUserId: userAccount.id,
+      },
+      authenticatedUser.account.id,
+    );
+
+    await sendForgotStorePasswordEmailService.execute({
+      cnpj: '11111111111180',
+      email: 'johndoe@example.com',
+    });
+
+    expect(sendMail).toHaveBeenCalled();
   });
 });

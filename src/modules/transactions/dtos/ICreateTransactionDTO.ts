@@ -6,4 +6,5 @@ export default interface ICreateTransactionDTO {
   paymentStatus: number;
   dueDate: Date;
   finalAmount: number;
+  paymentDate?: Date;
 }

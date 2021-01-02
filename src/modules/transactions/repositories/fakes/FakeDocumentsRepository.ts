@@ -15,7 +15,10 @@ class FakeDocumentsRepository implements IDocumentsRepository {
     id: string,
   ): Promise<Document[] | undefined> {
     const existDocuments = this.documents.filter(
-      document => document.fromAccountId === id && document.updated_at >= date,
+      document =>
+        document.fromAccountId === id &&
+        document.paymentDate >= date &&
+        document.paymentStatus === 2,
     );
 
     return existDocuments;
@@ -25,9 +28,13 @@ class FakeDocumentsRepository implements IDocumentsRepository {
     date: Date,
     id: string,
   ): Promise<Document[] | undefined> {
-    const entryDocuments = this.documents.filter(
-      document => document.gotoAccountId === id && document.updated_at >= date,
-    );
+    const entryDocuments = this.documents.filter(document => {
+      return (
+        document.gotoAccountId === id &&
+        document.paymentDate >= date &&
+        document.paymentStatus === 2
+      );
+    });
 
     return entryDocuments;
   }
