@@ -4,7 +4,7 @@ import { classToClass } from 'class-transformer';
 
 import CreateStoreAccountService from '@modules/accounts/services/CreateStoreAccountService';
 
-export default class UserAccountsController {
+export default class StoreAccountsController {
   public async create(request: Request, response: Response): Promise<Response> {
     const data = request.body;
 

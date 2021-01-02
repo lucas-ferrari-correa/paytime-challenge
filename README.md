@@ -1,7 +1,11 @@
 # **Paytime Challenge**
 
 A API desenvolvida em Typescript tem como objetivo simular a criação de contas de usuário, estabelecimentos e transferências entre as respectivas contas.
-#
+
+# Documentação
+Ao final deste documento se encontram os comandos necessários para a utilização desta API.
+
+Em cada pasta importante há sua devida documentação sobre os arquivos contidos.
 # Estrutura
 Há dois tipos de contas em que é possível realizar cadastros:
   - Conta de usuário: a partir de um CPF, nome, email e senha;
@@ -49,6 +53,7 @@ Procurou-se manter um padrão de estrutura dos arquivos segundo o **DDD** (Domai
 Sendo assim, de uma forma simples, cada uma das rotas terá um controlador que irá gerenciá-la, que por sua vez terão serviços responsáveis por garantir alguma regra de negócio ou funcionalidade.
 
 Também foi procurado manter um padrão de **TDD** (Test Driven Development) no intuito de orientar o desenvolvimento do código a partir das regras de negócio e suas permissões.
+- Foram realizados apenas testes unitários utilizando *jest*
 
 As funcionalidades ficaram inicialmente divididas em:
   - **config**: responsável por armazenar as configurações gerais (como autenticação, cache e envio de email)
@@ -92,6 +97,7 @@ Por sua vez cada domínio possuía suas respectivas dependências:
         - gotoAccountId: uuid
         - amount: decimal
         - paymentStatus: integer
+        - paymentDate: date
         - dueDate: date
         - paymentPenalty: decimal
         - interest: decimal
@@ -334,3 +340,12 @@ GET /extracts
 ```
 - Será possível visualizar o extrato detalhado de uma conta estando o mesmo autenticado.
 - Para a visualização do extrato, deve-se informar a data inicial (dia, mês e ano de forma separada)
+
+# Comandos
+- Clone o repositório
+- Dê `yarn install` para instalar todas as dependências
+- Defina as variáveis de ambiente de acordo com o arquivo de ambiente `.env.example` (transforme-o para um arquivo `.env`)
+- Configure o `ormconfig.json` de acordo com as configurações do seu BD.
+- Use `yarn dev:start` para iniciar servidor de desenvolvimento
+- Use `yarn test` para inicializar os testes
+- Para novas migrations do BD utilize `yarn typeorm migration:create -n <Nome_da_Migration>`
