@@ -52,10 +52,21 @@ profileRouter.put(
         .required()
         .regex(/^[0-9]+$/)
         .length(14),
-      accountUserId: Joi.string().required(),
-      old_password: Joi.string(),
-      password: Joi.string(),
-      password_confirmation: Joi.string().valid(Joi.ref('password')),
+      accountUserId: Joi.string().required().uuid(),
+      old_password: Joi.string()
+        .required()
+        .regex(
+          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/,
+        ),
+      password: Joi.string()
+        .required()
+        .regex(
+          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/,
+        ),
+      password_confirmation: Joi.string()
+        .required()
+        .regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/)
+        .valid(Joi.ref('password')),
     },
   }),
   storeProfileController.update,

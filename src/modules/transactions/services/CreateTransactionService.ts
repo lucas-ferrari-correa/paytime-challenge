@@ -82,15 +82,33 @@ class CreateTransactionService {
 
     await this.documentsRepository.save(payedDocument);
 
-    await this.cacheProvider.save(
-      `providers-list:${updatedAmountFromAccount.id}`,
-      classToClass(updatedAmountFromAccount),
-    );
+    if (updatedAmountFromAccount.cnpj) {
+      await this.cacheProvider.save(
+        `stores-list:${updatedAmountGotoAccount.id}:*`,
+        classToClass(updatedAmountGotoAccount),
+      );
+    }
 
-    await this.cacheProvider.save(
-      `providers-list:${updatedAmountGotoAccount.id}`,
-      classToClass(updatedAmountGotoAccount),
-    );
+    if (updatedAmountFromAccount.cpf) {
+      await this.cacheProvider.save(
+        `users-list:${updatedAmountFromAccount.id}`,
+        classToClass(updatedAmountFromAccount),
+      );
+    }
+
+    if (updatedAmountGotoAccount.cnpj) {
+      await this.cacheProvider.save(
+        `stores-list:${updatedAmountGotoAccount.id}:*`,
+        classToClass(updatedAmountGotoAccount),
+      );
+    }
+
+    if (updatedAmountGotoAccount.cpf) {
+      await this.cacheProvider.save(
+        `users-list:${updatedAmountGotoAccount.id}`,
+        classToClass(updatedAmountGotoAccount),
+      );
+    }
 
     return document;
   }

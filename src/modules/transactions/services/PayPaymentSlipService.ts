@@ -20,7 +20,7 @@ interface IRequest {
 }
 
 @injectable()
-class ShowPaymentSlipService {
+class PayPaymentSlipService {
   constructor(
     @inject('AccountsRepository')
     private accountsRepository: IAccountsRepository,
@@ -106,15 +106,33 @@ class ShowPaymentSlipService {
 
       await this.accountsRepository.save(updatedFromAccount);
 
-      await this.cacheProvider.save(
-        `accounts-list:${updatedFromAccount.id}`,
-        classToClass(updatedFromAccount),
-      );
+      if (updatedFromAccount.cnpj) {
+        await this.cacheProvider.save(
+          `stores-list:${updatedFromAccount.id}:*`,
+          classToClass(updatedFromAccount),
+        );
+      }
 
-      await this.cacheProvider.save(
-        `accounts-list:${updatedGotoAccount.id}`,
-        classToClass(updatedGotoAccount),
-      );
+      if (updatedFromAccount.cpf) {
+        await this.cacheProvider.save(
+          `users-list:${updatedFromAccount.id}`,
+          classToClass(updatedFromAccount),
+        );
+      }
+
+      if (updatedGotoAccount.cnpj) {
+        await this.cacheProvider.save(
+          `stores-list:${updatedGotoAccount.id}:*`,
+          classToClass(updatedGotoAccount),
+        );
+      }
+
+      if (updatedGotoAccount.cpf) {
+        await this.cacheProvider.save(
+          `users-list:${updatedGotoAccount.id}`,
+          classToClass(updatedGotoAccount),
+        );
+      }
 
       return updatedDocument;
     }
@@ -178,18 +196,36 @@ class ShowPaymentSlipService {
 
     await this.accountsRepository.save(updatedFromAccount);
 
-    await this.cacheProvider.save(
-      `accounts-list:${updatedFromAccount.id}`,
-      classToClass(updatedFromAccount),
-    );
+    if (updatedFromAccount.cnpj) {
+      await this.cacheProvider.save(
+        `stores-list:${updatedFromAccount.id}:*`,
+        classToClass(updatedFromAccount),
+      );
+    }
 
-    await this.cacheProvider.save(
-      `accounts-list:${updatedGotoAccount.id}`,
-      classToClass(updatedGotoAccount),
-    );
+    if (updatedFromAccount.cpf) {
+      await this.cacheProvider.save(
+        `users-list:${updatedFromAccount.id}`,
+        classToClass(updatedFromAccount),
+      );
+    }
+
+    if (updatedGotoAccount.cnpj) {
+      await this.cacheProvider.save(
+        `stores-list:${updatedGotoAccount.id}:*`,
+        classToClass(updatedGotoAccount),
+      );
+    }
+
+    if (updatedGotoAccount.cpf) {
+      await this.cacheProvider.save(
+        `users-list:${updatedGotoAccount.id}`,
+        classToClass(updatedGotoAccount),
+      );
+    }
 
     return updatedDocument;
   }
 }
 
-export default ShowPaymentSlipService;
+export default PayPaymentSlipService;

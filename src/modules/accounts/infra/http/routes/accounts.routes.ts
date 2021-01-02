@@ -45,7 +45,7 @@ accountsRouter.post(
         .regex(
           /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/,
         ),
-      accountUserId: Joi.string().required(),
+      accountUserId: Joi.string().required().uuid(),
     },
   }),
   storeAccountsController.create,

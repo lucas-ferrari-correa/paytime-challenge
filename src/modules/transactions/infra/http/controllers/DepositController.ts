@@ -4,7 +4,7 @@ import { classToClass } from 'class-transformer';
 
 import CreateDepositsService from '@modules/transactions/services/CreateDepositsService';
 
-export default class TransactionController {
+export default class DepositController {
   public async create(request: Request, response: Response): Promise<Response> {
     const { gotoAccountId, depositName, amount } = request.body;
 

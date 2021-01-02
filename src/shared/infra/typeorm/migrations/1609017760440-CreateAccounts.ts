@@ -44,11 +44,6 @@ export default class CreateAccounts1609017760440 implements MigrationInterface {
             isNullable: false,
           },
           {
-            name: 'administrator',
-            type: 'integer',
-            isNullable: true,
-          },
-          {
             name: 'created_at',
             type: 'timestamp',
             default: 'now()',

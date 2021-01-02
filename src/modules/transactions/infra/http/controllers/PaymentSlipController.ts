@@ -6,7 +6,7 @@ import CreatePaymentSlipService from '@modules/transactions/services/CreatePayme
 import ShowPaymentSlipService from '@modules/transactions/services/ShowPaymentSlipService';
 import PayPaymentSlipService from '@modules/transactions/services/PayPaymentSlipService';
 
-export default class TransactionController {
+export default class PaymentSlipController {
   public async create(request: Request, response: Response): Promise<Response> {
     const {
       amount,

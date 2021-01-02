@@ -38,10 +38,6 @@ class Account {
   @Column()
   amount: number;
 
-  @Column()
-  @Exclude()
-  administrator: number;
-
   @CreateDateColumn()
   created_at: Date;
 

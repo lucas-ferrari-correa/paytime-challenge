@@ -63,10 +63,19 @@ class CreateDepositsService {
 
     await this.documentsRepository.save(payedDocument);
 
-    await this.cacheProvider.save(
-      `accounts-list:${updatedAmountGotoAccount.id}`,
-      classToClass(updatedAmountGotoAccount),
-    );
+    if (updatedAmountGotoAccount.cnpj) {
+      await this.cacheProvider.save(
+        `stores-list:${updatedAmountGotoAccount.id}:*`,
+        classToClass(updatedAmountGotoAccount),
+      );
+    }
+
+    if (updatedAmountGotoAccount.cpf) {
+      await this.cacheProvider.save(
+        `users-list:${updatedAmountGotoAccount.id}`,
+        classToClass(updatedAmountGotoAccount),
+      );
+    }
 
     return document;
   }

@@ -13,7 +13,11 @@ sessionsRouter.post(
   celebrate({
     [Segments.BODY]: {
       email: Joi.string().email().required(),
-      password: Joi.string().required(),
+      password: Joi.string()
+        .required()
+        .regex(
+          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/,
+        ),
     },
   }),
   userSessionsController.create,
@@ -27,7 +31,11 @@ sessionsRouter.post(
         .required()
         .regex(/^[0-9]+$/)
         .length(14),
-      password: Joi.string().required(),
+      password: Joi.string()
+        .required()
+        .regex(
+          /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/,
+        ),
     },
   }),
   storeSessionsController.create,

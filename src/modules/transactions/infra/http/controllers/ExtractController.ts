@@ -4,7 +4,7 @@ import { classToClass } from 'class-transformer';
 
 import ListExtractsService from '@modules/transactions/services/ListExtractsService';
 
-export default class TransactionController {
+export default class ExtractController {
   public async create(request: Request, response: Response): Promise<Response> {
     const { initialDateDay, initialDateMonth, initialDateYear } = request.body;
     const { id } = request.account;

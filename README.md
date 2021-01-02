@@ -46,7 +46,7 @@ Verificador de CPF e CNPJ:
   - **CpfCnpjProvider**: Ok, este provedor não é uma biblioteca e sim algo que eu mesmo construi consultando estes dois sites para [CPF](https://www.geradorcpf.com/algoritmo_do_cpf.htm) e [CNPJ](https://www.geradorcnpj.com/algoritmo_do_cnpj.htm). O intuito era de poder verificar se os CPF e os CNPJ estariam formatados corretamente.
 
 Envio de Emails:
-  - **Mailtraper**: foi utilizado um serviço de envio de emails em ambiente de desenvolvimento para auxiliar a funcionalidade de recuperação de senha.
+  - **Ethereal**: foi utilizado um serviço de envio de emails em ambiente de desenvolvimento para auxiliar a funcionalidade de recuperação de senha.
 
 Procurou-se manter um padrão de estrutura dos arquivos segundo o **DDD** (Domain Desing Driven). Este padrão garante um melhor desacoplamento de dependências e interfaces e assim uma boa manutenabilidade e escalabilidde do código. Caso seja necessário modificar ou acrescentar alguma nova configuração, serão realizadas o mínimo de intervenções no código.
 
@@ -346,6 +346,8 @@ GET /extracts
 - Dê `yarn install` para instalar todas as dependências
 - Defina as variáveis de ambiente de acordo com o arquivo de ambiente `.env.example` (transforme-o para um arquivo `.env`)
 - Configure o `ormconfig.json` de acordo com as configurações do seu BD.
+- Use `yarn typeorm migration:run` para criar as tabelas no seu BD de acordo com as migrations
+- Para novas migrations do BD utilize `yarn typeorm migration:create -n <Nome_da_Migration>`
 - Use `yarn dev:start` para iniciar servidor de desenvolvimento
 - Use `yarn test` para inicializar os testes
-- Para novas migrations do BD utilize `yarn typeorm migration:create -n <Nome_da_Migration>`
+- Caso queira utilizar os endpoints já estabelecidos, o arquivo `Insomnia_2021-01-02` possui a exportação dos endpoints utilizados na construção desta API para a plataforma Insomnia.
